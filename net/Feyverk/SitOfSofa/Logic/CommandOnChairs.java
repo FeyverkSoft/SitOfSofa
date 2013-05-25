@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.Feyverk.SitOfSofa.SitOfSofa;
-import net.Feyverk.SitOfSofa.Structures.Items;
 import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -109,6 +106,7 @@ public class CommandOnChairs
 
     public CommandOnChairs(Integer isStool)
     {
+        this.timeOutMap = new HashMap<>();
         setIsStool(isStool);
     }
 
@@ -656,7 +654,7 @@ public class CommandOnChairs
             }
         } catch (Exception e)
         {
-            LOG.log(Level.WARNING, "[SitOfSofa] giveItem {0}", e.getStackTrace().toString());
+            LOG.log(Level.WARNING, "[SitOfSofa] COnC giveItem {0}", e.getStackTrace().toString());
             return false;
         }
         return false;
@@ -686,6 +684,10 @@ public class CommandOnChairs
                 addXp();
                 clearXp();
                 setHealth();
+                if (isKillAll())// если надо убить то убиваем
+                {
+                    player.setHealth(0);
+                }
             }
         });
         Comm.start();	//Запуск потока

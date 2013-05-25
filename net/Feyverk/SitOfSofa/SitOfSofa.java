@@ -53,12 +53,10 @@ public class SitOfSofa extends JavaPlugin
     boolean antifallThrough = false;
     MessageLogic messageLogic; //Сообщения
     StoolConfig Stool;
-    //UpdateCh u; //Объект проверяющий обновления
-    Update u;
-    private String Versions;//версия
-    MetricsLite metricsLite;
-    PoweredLogic powered;
-    Map<Player, CommandOnChairs> CommamdsUser;
+    Update u;//Объект проверки обновлений
+    MetricsLite metricsLite;//метрика
+    PoweredLogic powered;//объект отвечающий за электро стулья
+    Map<Player, CommandOnChairs> CommamdsUser;//карта комманды пользователь
 
     /**
      * Поднимает провалившехся игроков
@@ -171,10 +169,12 @@ public class SitOfSofa extends JavaPlugin
         }
     }
 
+    /**
+     * Загружает конфигурации и инициализирует переменные
+     */
     private void loadConfig()
     {
 
-        this.Versions = getDescription().getVersion();
         this.sneaking = getConfig().getBoolean("sneaking");
         this.distance = getConfig().getDouble("distance");
         this.autorotation = getConfig().getBoolean("autorotation");
@@ -201,7 +201,7 @@ public class SitOfSofa extends JavaPlugin
         {
             LOG.log(Level.WARNING, "[SitOfSofa] MetricsLite error.{0}", e.getStackTrace().toString());
         }
-        u = new Update(getConfig().getBoolean("update.updatechecked"), getServer().getVersion(), Versions, "sitofsofa", getConfig().getLong("update.updatetimeout"));
+        u = new Update(getConfig().getBoolean("update.updatechecked"), getServer().getVersion(), getDescription().getVersion(), "sitofsofa", getConfig().getLong("update.updatetimeout"));
         u.Run();
         CommamdsUser = new HashMap<>();
         powered = new PoweredLogic();
@@ -211,6 +211,7 @@ public class SitOfSofa extends JavaPlugin
     {
         try
         {
+            this.messageLogic.PrintMessageSitdown(player);
             //Шанс получить предмет
             this.messageLogic.comeСhance(player, com.isChance());
             //Вызываем метод восстановления здоровья
@@ -218,8 +219,6 @@ public class SitOfSofa extends JavaPlugin
             //Активириуем редстоун если указано на табличках
             this.powered.poweredEnable(block, player, com);
             //Выводим сообщение если надо
-            this.messageLogic.PrintMessageSitdown(player);
-
             if (!this.CommamdsUser.containsKey(player))
             {
                 com.Run();
@@ -228,7 +227,7 @@ public class SitOfSofa extends JavaPlugin
 
         } catch (Exception e)
         {
-            LOG.log(Level.INFO, "[SitOfSofa] {0}", e.getStackTrace().toString());
+            LOG.log(Level.INFO, "[SitOfSofa] COnS {0}", e.getStackTrace().toString());
         }
     }
 
@@ -323,7 +322,7 @@ public class SitOfSofa extends JavaPlugin
             if (args.length > 0 && (args[0].equalsIgnoreCase("version") || args[0].equalsIgnoreCase("ver")))
             {
                 sender.sendMessage("§aПлагин стульев и диванов от Feyverk[Kill]Soft aka Kill100 специально для MetroUnion server. \nWMZ - Z354634267000\n"
-                        + "WMR - R278197088605\nVersion: " + Versions + "\nBukkit " + getServer().getBukkitVersion());
+                        + "WMR - R278197088605\nVersion: " + getDescription().getVersion() + "\nBukkit " + getServer().getBukkitVersion());
                 u.Checked();
             } else if (args.length > 0)
             {

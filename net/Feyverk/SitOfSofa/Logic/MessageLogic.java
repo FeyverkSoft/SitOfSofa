@@ -203,7 +203,7 @@ public class MessageLogic extends FunctionalConfiguration
             this.NameAnyPlayer = "*";
         }
         return this.NameAnyPlayer;
-        
+
     }
 
     /**
@@ -587,7 +587,7 @@ public class MessageLogic extends FunctionalConfiguration
             this.ItemChanceMap = new HashMap<>();
         }
     }
-    
+
     private boolean AddNameMessage(String namemessage)
     {
         if (namemessage.contains(":"))
@@ -673,7 +673,7 @@ public class MessageLogic extends FunctionalConfiguration
                 {
                     LOG.warning("[SisOfSofa] Incorrerct chance config.");
                 }
-                
+
             }
             //LOG.log(Level.INFO, "{0} {1}", new Object[]{Integer.parseInt(Keys), getConfig().getString(Path + "." + Keys)});
             //Temp.put(Integer.parseInt(Keys), getConfig().getInt(Path + "." + Keys));
@@ -725,7 +725,7 @@ public class MessageLogic extends FunctionalConfiguration
             LOG.log(Level.WARNING, "[SitOfSofa] messagelog load config error {0}", e.getStackTrace().toString());
             //e.printStackTrace();
         }
-        
+
         try
         {
             if (getEnableSitingMessage() != false && getEnableStandUpMessage() != false)
@@ -758,7 +758,7 @@ public class MessageLogic extends FunctionalConfiguration
         {
             args[i] = args[i].replace(":", "");
         }
-        
+
         String temp = args[1];//добавляем ник
         Boolean flag = false;
         //формируем строку
@@ -814,7 +814,7 @@ public class MessageLogic extends FunctionalConfiguration
                 sender.sendMessage(mes);
                 return false;
             }
-            
+
             String Temp = BuildUserStringFromArgs(args);
             if (Temp.compareTo("") != 0)
             {
@@ -963,12 +963,15 @@ public class MessageLogic extends FunctionalConfiguration
         {
             if (getEnableChance() || com)
             {
+                if (!getTimeOutMap().containsKey(player))
+                {
+                    getTimeOutMap().put(player, new TimeOut(0, 0, 0));
+                }
                 if (!(System.currentTimeMillis() - getTimeOutMap().get(player).getChanceTime() < getTimeoutChance()))
                 {
                     int counts = 0;
                     if (counts < getMaxCountItem())
                     {
-                        
                         String Itemss = "";
                         Random rand = new Random();
                         for (Map.Entry<Items, Integer> item : getItemChanceMap().entrySet())
@@ -1065,5 +1068,4 @@ public class MessageLogic extends FunctionalConfiguration
         }
         return true;
     }
-
 }

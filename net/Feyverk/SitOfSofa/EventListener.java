@@ -59,7 +59,7 @@ public class EventListener implements Listener
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
         if (event.hasBlock() && event.getAction() == Action.RIGHT_CLICK_BLOCK)
@@ -77,30 +77,23 @@ public class EventListener implements Listener
                 plugin.standUp(player);
                 return;
             }
+            
+            // проверяем разрешения на посадку
+            if (!player.hasPermission("sofa.sit"))
+            {
+                return;
+            }
+            
             CommandOnChairs com = plugin.Stool.checkChair(block);//комманды на стуле
             //-1 не стул, 0 - скамья, 1 - диван
             int type = com.getIsStool();
             if (type != -1)
             {
-
-                // проверяем разрешения на посадку
-                if (!player.hasPermission("sofa.sit"))
-                {
-                    return;
-                }
                 com.setPlayer(player);
-
                 if (!com.isPrivate(player))
                 {
                     return;
                 }
-
-                if (com.isKillAll())// если надо убить то убиваем
-                {
-                    player.setHealth(0);
-                    return;
-                }
-
                 // Check if player is sneaking.
                 if (plugin.sneaking == false || (plugin.sneaking == true && player.isSneaking()))
                 {
