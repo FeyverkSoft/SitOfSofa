@@ -71,7 +71,12 @@ public class EventListener implements Listener
             {
                 return;
             }
-
+            // если игрок сидит
+            if (plugin.Stool.getSittingPlayers().containsKey(player))
+            {
+                plugin.standUp(player);
+                return;
+            }
             CommandOnChairs com = plugin.Stool.checkChair(block);//комманды на стуле
             //-1 не стул, 0 - скамья, 1 - диван
             int type = com.getIsStool();
@@ -84,12 +89,6 @@ public class EventListener implements Listener
                     return;
                 }
                 com.setPlayer(player);
-                // если игрок сидит
-                if (plugin.Stool.getSittingPlayers().containsKey(player))
-                {
-                    plugin.standUp(player);
-                    return;
-                }
 
                 if (!com.isPrivate(player))
                 {

@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.Feyverk.SitOfSofa.SitOfSofa;
+import net.Feyverk.SitOfSofa.Structures.Items;
 import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -20,6 +22,26 @@ import org.bukkit.inventory.ItemStack;
  */
 public class CommandOnChairs
 {
+
+    /**
+     * Карта где ключ это игрок а значение время когда происходило событие
+     */
+    private HashMap<Player, TimeOut> timeOutMap;
+
+    /**
+     * Карта где ключ это игрок а значение время когда происходило событие
+     *
+     * @return возвращает карту где ключ это игрок а значение время когда
+     * происходило событие
+     */
+    public HashMap<Player, TimeOut> getTimeOutMap()
+    {
+        if (this.timeOutMap == null)
+        {
+            this.timeOutMap = new HashMap<>();
+        }
+        return this.timeOutMap;
+    }
 
     /**
      * Проверяет является ли строка числом Int
@@ -95,8 +117,6 @@ public class CommandOnChairs
         this.player = player;
     }
 
-    
-    
     /**
      * Устанавливает длину скамейки
      *
@@ -538,6 +558,137 @@ public class CommandOnChairs
             }
         }
         return -1;
+    }
+
+    public Boolean addXp()
+    {
+        if (isAddXp())
+        {
+            int[] t = getXpCount();
+            if (!getTimeOutMap().containsKey(player))
+            {
+                getTimeOutMap().put(player, new TimeOut(0, 0, 0));
+            }
+            if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comXpAddTime() <= t[1]))
+            {
+                if (t[0] >= 0)
+                {
+                    player.giveExp(t[0]);
+                } else
+                {
+                    int _Temp = player.getTotalExperience();
+                    _Temp += t[0];
+                    if (_Temp >= 0)
+                    {
+                        player.setTotalExperience(0);
+                        player.setLevel(0);
+                        player.setExp(0.0F);
+                        player.giveExp(_Temp);
+                    } else
+                    {
+                        player.setTotalExperience(0);
+                        player.setLevel(0);
+                        player.setExp(0.0F);
+                        player.giveExp(0);
+                    }
+                }
+                getTimeOutMap().get(player).set_comXpAddTime(System.currentTimeMillis());
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Сносит весь XP у игрока, есть есть команда на табличках
+     *
+     * @param player игрок
+     * @param com списко команд на табличках
+     * @return true-если снесли, false - если нет
+     */
+    public Boolean clearXp()
+    {
+        if (isClearXp())
+        {
+            player.setTotalExperience(0);
+            player.setLevel(0);
+            player.setExp(0.0F);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Игрок получает предметы указанные на табличках
+     *
+     * @param player игрок
+     * @param com команды
+     * @return true- если предметы получены, false -если что то пошло не так
+     */
+    public Boolean giveItem()
+    {
+        try
+        {
+            if (isGiveItem())
+            {
+                Map<ItemStack, Long> _Map = getItemStack();
+                if (!getTimeOutMap().containsKey(player))
+                {
+                    LOG.info("0");
+                    getTimeOutMap().put(player, new TimeOut());
+                } else
+                {
+                    for (Map.Entry<ItemStack, Long> entry : _Map.entrySet())
+                    {
+                        if (!getTimeOutMap().get(player).get_comGiveItem().containsKey(entry.getKey()))
+                        {
+                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), 0l);
+                        }
+                        if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
+                        {
+                            player.getInventory().addItem(entry.getKey());
+                            getTimeOutMap().get(player).get_comGiveItem().remove(entry.getKey());
+                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
+                        }
+
+                    }
+                }
+                return true;
+            }
+        } catch (Exception e)
+        {
+            LOG.log(Level.WARNING, "[SitOfSofa] giveItem {0}", e.getStackTrace().toString());
+            return false;
+        }
+        return false;
+    }
+
+    public void setHealth()
+    {
+        if (isSetHealh())
+        {
+            int h = getHealhCount();
+            if (h >= 0)
+            {
+                player.setHealth(h);
+            }
+        }
+    }
+
+    public void Run()
+    {
+        //Создание потока
+        Thread Comm;
+        Comm = new Thread(new Runnable()
+        {
+            public void run() //Этот метод будет выполняться в побочном потоке
+            {
+                giveItem();
+                addXp();
+                clearXp();
+                setHealth();
+            }
+        });
+        Comm.start();	//Запуск потока
     }
     private static final Logger LOG = Logger.getLogger(CommandOnChairs.class.getName());
 }

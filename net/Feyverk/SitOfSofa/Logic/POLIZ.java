@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  */
 public class POLIZ
 {
-
+/*
     /// <summary>
     /// Парсер строки в ПОЛИЗ
     /// </summary>
@@ -114,5 +114,6 @@ public class POLIZ
         }
         return myoutputString.substring(1, myoutputString.length() - 2);
     }
+     */
     private static final Logger LOG = Logger.getLogger(POLIZ.class.getName());
 }

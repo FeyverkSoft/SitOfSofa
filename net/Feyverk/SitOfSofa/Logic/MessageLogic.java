@@ -957,11 +957,11 @@ public class MessageLogic extends FunctionalConfiguration
      * @param player Игрок который сел на скамейку
      * @return true - если игрок что то нашел, иначе false
      */
-    public boolean comeСhance(Player player, CommandOnChairs com)
+    public boolean comeСhance(Player player, boolean com)
     {
-        if (com.isChance())
+        if (com)
         {
-            if (getEnableChance() || com.isChance())
+            if (getEnableChance() || com)
             {
                 if (!(System.currentTimeMillis() - getTimeOutMap().get(player).getChanceTime() < getTimeoutChance()))
                 {
@@ -1024,63 +1024,6 @@ public class MessageLogic extends FunctionalConfiguration
         }
         return SaveConfig();//сохраняем на диск и возвращаем результат сохранения
     }
-    
-    public Boolean addXp(Player player, CommandOnChairs com)
-    {
-        if (com.isAddXp())
-        {
-            int[] t = com.getXpCount();
-            if (!getTimeOutMap().containsKey(player))
-            {
-                getTimeOutMap().put(player, new TimeOut(0, 0, 0));
-            }
-            if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comXpAddTime() <= t[1]))
-            {
-                if (t[0] >= 0)
-                {
-                    player.giveExp(t[0]);
-                } else
-                {
-                    int _Temp = player.getTotalExperience();
-                    _Temp += t[0];
-                    if (_Temp >= 0)
-                    {
-                        player.setTotalExperience(0);
-                        player.setLevel(0);
-                        player.setExp(0.0F);
-                        player.giveExp(_Temp);
-                    } else
-                    {
-                        player.setTotalExperience(0);
-                        player.setLevel(0);
-                        player.setExp(0.0F);
-                        player.giveExp(0);
-                    }
-                }
-                getTimeOutMap().get(player).set_comXpAddTime(System.currentTimeMillis());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Сносит весь XP у игрока, есть есть команда на табличках
-     *
-     * @param player игрок
-     * @param com списко команд на табличках
-     * @return true-если снесли, false - если нет
-     */
-    public Boolean clearXp(Player player, CommandOnChairs com)
-    {
-        if (com.isClearXp())
-        {
-            player.setTotalExperience(0);
-            player.setLevel(0);
-            player.setExp(0.0F);
-            return true;
-        }
-        return false;
-    }
 
     /**
      * Восстанавливает игроку здоровье если разрешено в конфигурации
@@ -1088,16 +1031,16 @@ public class MessageLogic extends FunctionalConfiguration
      * @param player - игрок которому надо восстановить здоровье
      * @return true - если восстановленно удачно иначе false
      */
-    public Boolean restoreHealth(Player player, CommandOnChairs com)
+    public Boolean restoreHealth(Player player, int com)
     {
-        if (com.isRestoreHealth() == 2)
+        if (com == 2)
         {
             if (!player.hasPermission("sofa.restorehealth"))
             {
                 return false;
             }
         }
-        if (com.isRestoreHealth() == 1)
+        if (com == 1)
         {
             try
             {
@@ -1123,48 +1066,4 @@ public class MessageLogic extends FunctionalConfiguration
         return true;
     }
 
-    /**
-     * Игрок получает предметы указанные на табличках
-     *
-     * @param player игрок
-     * @param com команды
-     * @return true- если предметы получены, false -если что то пошло не так
-     */
-    public Boolean giveItem(Player player, CommandOnChairs com)
-    {
-        try
-        {
-            if (com.isGiveItem())
-            {
-                Map<ItemStack, Long> _Map = com.getItemStack();
-                if (!getTimeOutMap().containsKey(player))
-                {
-                    LOG.info("0");
-                    getTimeOutMap().put(player, new TimeOut());
-                } else
-                {
-                    for (Map.Entry<ItemStack, Long> entry : _Map.entrySet())
-                    {
-                        if (!getTimeOutMap().get(player).get_comGiveItem().containsKey(entry.getKey()))
-                        {
-                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), 0l);
-                        }
-                        if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
-                        {
-                            player.getInventory().addItem(entry.getKey());
-                            getTimeOutMap().get(player).get_comGiveItem().remove(entry.getKey());
-                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
-                        }
-                        
-                    }
-                }
-                return true;
-            }
-        } catch (Exception e)
-        {
-            LOG.log(Level.WARNING, "[SitOfSofa] giveItem {0}", e.getStackTrace().toString());
-            return false;
-        }
-        return false;
-    }
 }

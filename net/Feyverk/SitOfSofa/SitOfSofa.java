@@ -138,6 +138,7 @@ public class SitOfSofa extends JavaPlugin
         metricsLite = null;
         CommamdsUser = null;
         powered.poweredDisableAll();
+        powered = null;
         LOG.info("[SitOfSofa] Disabled.");
     }
 
@@ -211,25 +212,20 @@ public class SitOfSofa extends JavaPlugin
         try
         {
             //Шанс получить предмет
-            this.messageLogic.comeСhance(player, com);
+            this.messageLogic.comeСhance(player, com.isChance());
             //Вызываем метод восстановления здоровья
-            this.messageLogic.restoreHealth(player, com);
-            //Вызываем метод добавления опыта
-            this.messageLogic.addXp(player, com);
-            //Сносим весть xp
-            this.messageLogic.clearXp(player, com);
-            //даём игроку предметы
-            this.messageLogic.giveItem(player, com);
-            if (com.isSetHealh())
-            {
-                int h = com.getHealhCount();
-                if (h >= 0)
-                {
-                    player.setHealth(h);
-                }
-            }
+            this.messageLogic.restoreHealth(player, com.isRestoreHealth());
             //Активириуем редстоун если указано на табличках
             this.powered.poweredEnable(block, player, com);
+            //Выводим сообщение если надо
+            this.messageLogic.PrintMessageSitdown(player);
+
+            if (!this.CommamdsUser.containsKey(player))
+            {
+                com.Run();
+                this.CommamdsUser.put(player, com);
+            }
+
         } catch (Exception e)
         {
             LOG.log(Level.INFO, "[SitOfSofa] {0}", e.getStackTrace().toString());
@@ -260,14 +256,6 @@ public class SitOfSofa extends JavaPlugin
         }
         player.teleport(Loc);//опускаем игрока на пол блока и центруем
         Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x4), false);
-
-        //Выводим сообщение если надо
-        this.messageLogic.PrintMessageSitdown(player);
-
-        if (!this.CommamdsUser.containsKey(player))
-        {
-            this.CommamdsUser.put(player, com);
-        }
 
         //функция для комманд на табличках
         commandOnSign(player, com, block);
