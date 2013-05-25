@@ -1,0 +1,72 @@
+name: SitOfSofa
+version: 1.2.18
+description: Let players sit and lay down on blocks.
+author: Feyverk[Kill]soft
+main: net.Feyverk.SitOfSofa.SitOfSofa
+softdepend: [Spout]
+commands:
+     sofa:
+        usage: /<command> reload
+        description: Reloads the Comfort configuration file
+        usage: /<command> addmessage
+        description:  Add new user-message from configuration file.
+        usage: /<command> settimeout
+        description:   Change the timeout between send re message.
+        usage: /<command> setstartmessage
+        description:  Specifies the first part of the string.
+        usage: /<command> setrestoreshealth
+        description:  Set restore health by landing on a chair.
+        usage: /<command> changemessage
+        description:  Change message of specific user.
+        usage: /<command> cm
+        usage: /<command> cm
+        description:  Change message of current user
+        usage: /<command> removemessage
+        description:  Remove message of specific user.
+        usage: /<command> changeenable
+        description:  Changes Can players generally find items.
+        usage: /<command> setlanguage
+        description:  Changes current plugin language.
+permissions:
+    sofa.*:
+        description: Gives access to all Comfort features and commands.
+        children:
+            sofa.reload: true
+            sofa.sit: true
+            sofa.addmessage: true
+            sofa.settimeout: true
+            sofa.setstartmessage: true
+            sofa.setrestoreshealth: true
+            sofa.changemessage: true
+            sofa.cm: true
+            sofa.removemessage: true
+            sofa.changeenable: true
+            sofa.setlanguage: true
+            sofa.restorehealth: true
+            sofa.programm: true
+    sofa.reload:
+        description: Allows you to reload the Comfort configuration file.
+    sofa.sit:
+        description: Allows you to sit on Comfort seats.
+    sofa.addmessage: 
+        description: Allows you to Add new user-message from configuration file.
+    sofa.settimeout: 
+        description: Allows you to Change the timeout between send re message.
+    sofa.setstartmessage: 
+        description: Allows you to Specifies the first part of the string.
+    sofa.setrestoreshealth: 
+        description: Allows you to Set restore health by landing on a chair.
+    sofa.changemessage: 
+        description: Allows you to Change message of specific user.
+    sofa.cm: 
+        description: Allows you to Change message of current user
+    sofa.removemessage: 
+        description: Allows you to Remove message of specific user.
+    sofa.changeenable: 
+       description: Changes Can players generally find items.
+    sofa.setlanguage: 
+       description: Changes current plugin language.
+    sofa.restorehealth: 
+       description: restore health current player.
+    sofa.programm:
+       description: Programming
