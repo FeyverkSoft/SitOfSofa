@@ -1,9 +1,5 @@
 package net.Feyverk.SitOfSofa.Logic;
 
-import com.avaje.ebeaninternal.server.el.ElSetValue;
-import net.Feyverk.SitOfSofa.Structures.BoolMessage;
-import net.Feyverk.SitOfSofa.Structures.Items;
-import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,6 +10,9 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.Feyverk.SitOfSofa.SitOfSofa;
+import net.Feyverk.SitOfSofa.Structures.BoolMessage;
+import net.Feyverk.SitOfSofa.Structures.Items;
+import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;

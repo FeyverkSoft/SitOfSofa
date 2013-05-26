@@ -289,6 +289,7 @@ public class Update
         Thread autoChecked;
         autoChecked = new Thread(new Runnable()
         {
+            @Override
             public void run() //Этот метод будет выполняться в побочном потоке
             {
                 autoChecked();

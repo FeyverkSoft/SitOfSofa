@@ -157,6 +157,7 @@ public class EventListener implements Listener
         final Player player = event.getPlayer();
         plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
         {
+            @Override
             public void run()//новый параллельный поток
             {
                 for (Map.Entry<Player, Block> e : plugin.Stool.getSittingPlayers().entrySet())

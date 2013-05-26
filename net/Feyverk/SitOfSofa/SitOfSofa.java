@@ -58,58 +58,6 @@ public class SitOfSofa extends JavaPlugin
     PoweredLogic powered;//объект отвечающий за электро стулья
     Map<Player, CommandOnChairs> CommamdsUser;//карта комманды пользователь
 
-    /**
-     * Поднимает провалившехся игроков
-     */
-    private void antiFallThrough()
-    {
-        try
-        {
-            Random rand = new Random();
-            while (true && antifallThrough)
-            {
-                {
-                    for (Map.Entry<Player, Block> plb : Stool.getSittingPlayers().entrySet())
-                    {
-                        Block block = plb.getValue();
-                        Location loc = block.getLocation();
-                        Player pl = plb.getKey();
-                        loc.add(Stool.getSittingDepthX(block), Stool.getSittingDepthY(block), Stool.getSittingDepthZ(block)).setYaw(pl.getLocation().getYaw());
-                        Stool.getSittingPlayersNameFalg().put(plb.getKey().getDisplayName(), true);
-                        //LOG.info(loc.toString());
-                        pl.teleport(loc);
-                        Stool.getSittingPlayersNameFalg().put(plb.getKey().getDisplayName(), false);
-                    }
-                    Thread.sleep(2000 + rand.nextInt(3) * 12000l);
-                }
-            }
-        } catch (Exception e)
-        {
-            LOG.log(Level.WARNING, "{0}\n{1}", new Object[]
-            {
-                e.getMessage(), e.getStackTrace().toString()
-            });
-        }
-    }
-
-    /**
-     * Запускат подъём провалившехся игроков
-     */
-    protected void antiFallThroughThreadyRun()
-    {
-
-        //Создание потока
-        Thread antiFallThroughThready;
-        antiFallThroughThready = new Thread(new Runnable()
-        {
-            public void run() //Этот метод будет выполняться в побочном потоке
-            {
-                antiFallThrough();
-            }
-        });
-        antiFallThroughThready.start();	//Запуск потока
-    }
-
     @Override
     public void onEnable()
     {
@@ -138,180 +86,6 @@ public class SitOfSofa extends JavaPlugin
         powered.poweredDisableAll();
         powered = null;
         LOG.info("[SitOfSofa] Disabled.");
-    }
-
-    //Создание конфига
-    private void createConfig()
-    {
-        if (!pluginFolder.exists())//если папка плагина не найдена
-        {
-            try
-            {
-                pluginFolder.mkdir();//создаем новую
-            } catch (Exception e)//если ошибка создания
-            {
-                LOG.info(e.getStackTrace().toString());
-                //e.printStackTrace();//пишем в консоль
-            }
-        }
-
-        if (!configFile.exists())//если конфиг не найден
-        {
-            try
-            {
-                configFile.createNewFile();//создаём файл конфигурации
-                getConfig().options().copyDefaults(true);//копируем из конфига по умолчанию
-            } catch (Exception e)//если ошибка
-            {
-                LOG.info(e.getStackTrace().toString());
-                //e.printStackTrace();//пишем в консоль
-            }
-        }
-    }
-
-    /**
-     * Загружает конфигурации и инициализирует переменные
-     */
-    private void loadConfig()
-    {
-
-        this.sneaking = getConfig().getBoolean("sneaking");
-        this.distance = getConfig().getDouble("distance");
-        this.autorotation = getConfig().getBoolean("autorotation");
-        this.antifallThrough = getConfig().getBoolean("antifallthrough");
-        LOG.info("[SitOfSofa] Language loading...");
-        lang = new Localization(getDataFolder(), "lang.yml");
-        LOG.info("[SitOfSofa] Language load.");
-        LOG.info("[SitOfSofa] Config Stool loading...");
-        this.Stool = new StoolConfig(getDataFolder(), "config.yml", getServer().getPluginManager().getPlugin("Spout") != null);
-        LOG.info("[SitOfSofa] Config Stool load.");
-        LOG.info("[SitOfSofa] Message and chance settings loading...");
-        //инициализируем и загружаем конфиг для сообщений
-        this.messageLogic = new MessageLogic("usermessageAndChance.yml", getDataFolder(), true);
-        LOG.info("[SitOfSofa] Message and chance settings load.");
-        if (this.antifallThrough)
-        {
-            antiFallThroughThreadyRun();
-        }
-        try
-        {
-            this.metricsLite = new MetricsLite(this);
-            this.metricsLite.start();
-        } catch (Exception e)
-        {
-            LOG.log(Level.WARNING, "[SitOfSofa] MetricsLite error.{0}", e.getStackTrace().toString());
-        }
-        u = new Update(getConfig().getBoolean("update.updatechecked"), getServer().getVersion(), getDescription().getVersion(), "sitofsofa", getConfig().getLong("update.updatetimeout"));
-        u.Run();
-        CommamdsUser = new HashMap<>();
-        powered = new PoweredLogic();
-    }
-
-    private void commandOnSign(Player player, CommandOnChairs com, Block block)
-    {
-        try
-        {
-            this.messageLogic.PrintMessageSitdown(player);
-            //Шанс получить предмет
-            this.messageLogic.comeСhance(player, com.isChance());
-            //Вызываем метод восстановления здоровья
-            this.messageLogic.restoreHealth(player, com.isRestoreHealth());
-            //Активириуем редстоун если указано на табличках
-            this.powered.poweredEnable(block, player, com);
-            //Выводим сообщение если надо
-            if (!this.CommamdsUser.containsKey(player))
-            {
-                com.Run();
-                this.CommamdsUser.put(player, com);
-            }
-
-        } catch (Exception e)
-        {
-            LOG.log(Level.INFO, "[SitOfSofa] COnS {0}", e.getStackTrace().toString());
-        }
-    }
-
-    //Метод описывающий как игрок садится
-    public void sitDown(Player player, Block block, CommandOnChairs com)
-    {
-        if (player.getGameMode() != GameMode.CREATIVE)//если игрок не креатив
-        {
-            player.setAllowFlight(!player.getAllowFlight());
-            player.setFlying(player.getAllowFlight());
-        }
-        Location Loc = block.getLocation().add(this.Stool.getSittingDepthX(block), this.Stool.getSittingDepthY(block), this.Stool.getSittingDepthZ(block));
-
-        if (this.autorotation)// если включён авто поворот :)
-        {
-            int Yaw;
-            if (com.getIsStool() == 1)
-            {
-                Yaw = this.Stool.getSofaOrientation(block);
-            } else
-            {
-                Yaw = block.getData();
-            }
-            Loc.setYaw(this.Stool.Rotati(Yaw));//поворот игрока
-        }
-        player.teleport(Loc);//опускаем игрока на пол блока и центруем
-        Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x4), false);
-
-        //функция для комманд на табличках
-        commandOnSign(player, com, block);
-        for (Player p : getServer().getOnlinePlayers())//если игрок онлайн
-        {
-            //применяем изменения
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
-        }
-        this.Stool.getSittingPlayers().put(player, block);
-        this.Stool.getSittingPlayersNameFalg().put(player.getDisplayName(), false);
-    }
-
-//Метод вставания игрока
-    public void standUp(Player player)
-    {
-        Location loc = player.getLocation();
-        loc.add(0f, 1f, 0f);
-
-        if (player.getGameMode() != GameMode.CREATIVE)
-        {
-            player.setAllowFlight(!player.getAllowFlight());
-            player.setFlying(player.getAllowFlight());
-        }
-        Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x00), false);
-        //Выводим сообщение если надо
-        this.messageLogic.PrintMessageStandUp(player);
-
-        for (Player p : getServer().getOnlinePlayers())
-        {
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
-        }
-
-        if (this.CommamdsUser.containsKey(player))
-        {
-            this.powered.poweredDisable(player);
-            this.CommamdsUser.remove(player);
-        }
-        this.Stool.getSittingPlayers().remove(player);
-        this.Stool.getSittingPlayersNameFalg().remove(player.getDisplayName());
-        player.setSneaking(false);
-        player.teleport(loc);//Подкидываем что бы не провалился сквозь пол :)
-    }
-
-    private void HelpMessage(CommandSender sender)
-    {
-        sender.sendMessage(
-                "/sofa reload " + lang.getMessagePlugin("HELP_RELOAD")
-                + "§f\n /sofa version " + lang.getMessagePlugin("OR") + "§e /sofa ver" + lang.getMessagePlugin("HELP_VERSION")
-                + "§f\n /sofa addmessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("FOR_ADD_NEW_MESSAGE")
-                + "§f\n /sofa settimeout <0..long.Max> " + lang.getMessagePlugin("TO_CHANGE_DEALY_INTERVAL_REMESSAGES")
-                + "§f\n /sofa setstartmessage <\"String\"> " + lang.getMessagePlugin("CHANGE_FIRST_PART_OF_MESSAGE")
-                + "§f\n /sofa setrestoreshealth <true/false> " + lang.getMessagePlugin("RESTORE_HEALTH_OF_THE_PLAYERS_WHEN_SITS")
-                + "§f\n /sofa changemessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("CHANGE_MESSAGE_FOR_SPECIFIED_USER")
-                + "§f\n /sofa cm <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("CHANGE_MESSAGE_FOR_CURRENT_USER")
-                + "§f\n /sofa removemessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("REMOVE_MESSAGE_FOR_SPECIFIED_USER")
-                + "§f\n /sofa changeenable <true/false> " + lang.getMessagePlugin("CANT_PLAYERS_FIND_ITEMS")
-                + "§f\n /sofa setlanguage <Lang> " + "§eTo change the language / Для смены языка");
     }
 
     @Override
@@ -554,5 +328,231 @@ public class SitOfSofa extends JavaPlugin
             }
         }
         return true;
+    }
+
+    //Создание конфига
+    private void createConfig()
+    {
+        if (!pluginFolder.exists())//если папка плагина не найдена
+        {
+            try
+            {
+                pluginFolder.mkdir();//создаем новую
+            } catch (Exception e)//если ошибка создания
+            {
+                LOG.info(e.getStackTrace().toString());
+                //e.printStackTrace();//пишем в консоль
+            }
+        }
+
+        if (!configFile.exists())//если конфиг не найден
+        {
+            try
+            {
+                configFile.createNewFile();//создаём файл конфигурации
+                getConfig().options().copyDefaults(true);//копируем из конфига по умолчанию
+            } catch (Exception e)//если ошибка
+            {
+                LOG.info(e.getStackTrace().toString());
+                //e.printStackTrace();//пишем в консоль
+            }
+        }
+    }
+
+    /**
+     * Загружает конфигурации и инициализирует переменные
+     */
+    private void loadConfig()
+    {
+
+        this.sneaking = getConfig().getBoolean("sneaking");
+        this.distance = getConfig().getDouble("distance");
+        this.autorotation = getConfig().getBoolean("autorotation");
+        this.antifallThrough = getConfig().getBoolean("antifallthrough");
+        LOG.info("[SitOfSofa] Language loading...");
+        lang = new Localization(getDataFolder(), "lang.yml");
+        LOG.info("[SitOfSofa] Language load.");
+        LOG.info("[SitOfSofa] Config Stool loading...");
+        this.Stool = new StoolConfig(getDataFolder(), "config.yml", getServer().getPluginManager().getPlugin("Spout") != null);
+        LOG.info("[SitOfSofa] Config Stool load.");
+        LOG.info("[SitOfSofa] Message and chance settings loading...");
+        //инициализируем и загружаем конфиг для сообщений
+        this.messageLogic = new MessageLogic("usermessageAndChance.yml", getDataFolder(), true);
+        LOG.info("[SitOfSofa] Message and chance settings load.");
+        if (this.antifallThrough)
+        {
+            antiFallThroughThreadyRun();
+        }
+        try
+        {
+            this.metricsLite = new MetricsLite(this);
+            this.metricsLite.start();
+        } catch (Exception e)
+        {
+            LOG.log(Level.WARNING, "[SitOfSofa] MetricsLite error.{0}", e.getStackTrace().toString());
+        }
+        u = new Update(getConfig().getBoolean("update.updatechecked"), getServer().getVersion(), getDescription().getVersion(), "sitofsofa", getConfig().getLong("update.updatetimeout"));
+        u.Run();
+        CommamdsUser = new HashMap<>();
+        powered = new PoweredLogic();
+    }
+
+    /**
+     * Поднимает провалившехся игроков
+     */
+    private void antiFallThrough()
+    {
+        try
+        {
+            Random rand = new Random();
+            while (true && antifallThrough)
+            {
+                {
+                    for (Map.Entry<Player, Block> plb : Stool.getSittingPlayers().entrySet())
+                    {
+                        Block block = plb.getValue();
+                        Location loc = block.getLocation();
+                        Player pl = plb.getKey();
+                        loc.add(Stool.getSittingDepthX(block), Stool.getSittingDepthY(block), Stool.getSittingDepthZ(block)).setYaw(pl.getLocation().getYaw());
+                        Stool.getSittingPlayersNameFalg().put(plb.getKey().getDisplayName(), true);
+                        //LOG.info(loc.toString());
+                        pl.teleport(loc);
+                        Stool.getSittingPlayersNameFalg().put(plb.getKey().getDisplayName(), false);
+                    }
+                    Thread.sleep(2000 + rand.nextInt(3) * 12000l);
+                }
+            }
+        } catch (Exception e)
+        {
+            LOG.log(Level.WARNING, "{0}\n{1}", new Object[]
+            {
+                e.getMessage(), e.getStackTrace().toString()
+            });
+        }
+    }
+
+    /**
+     * Запускат подъём провалившехся игроков
+     */
+    protected void antiFallThroughThreadyRun()
+    {
+
+        //Создание потока
+        Thread antiFallThroughThready;
+        antiFallThroughThready = new Thread(new Runnable()
+        {
+            @Override
+            public void run() //Этот метод будет выполняться в побочном потоке
+            {
+                antiFallThrough();
+            }
+        });
+        antiFallThroughThready.start();	//Запуск потока
+    }
+
+    private void commandOnSign(Player player, CommandOnChairs com, Block block)
+    {
+        try
+        {
+            //Выводим сообщение если надо
+            this.messageLogic.PrintMessageSitdown(player);
+            //Шанс получить предмет
+            this.messageLogic.comeСhance(player, com.isChance());
+            //Вызываем метод восстановления здоровья
+            this.messageLogic.restoreHealth(player, com.isRestoreHealth());
+            //Активириуем редстоун если указано на табличках
+            this.powered.poweredEnable(block, player, com);
+            if (!this.CommamdsUser.containsKey(player))
+            {
+                this.CommamdsUser.put(player, com);
+            }
+            com.Run();
+        } catch (Exception e)
+        {
+            LOG.log(Level.INFO, "[SitOfSofa] COnS {0}", e.getStackTrace().toString());
+        }
+    }
+
+    //Метод описывающий как игрок садится
+    public void sitDown(Player player, Block block, CommandOnChairs com)
+    {
+        if (player.getGameMode() != GameMode.CREATIVE)//если игрок не креатив
+        {
+            player.setAllowFlight(!player.getAllowFlight());
+            player.setFlying(player.getAllowFlight());
+        }
+        Location Loc = block.getLocation().add(this.Stool.getSittingDepthX(block), this.Stool.getSittingDepthY(block), this.Stool.getSittingDepthZ(block));
+
+        if (this.autorotation)// если включён авто поворот :)
+        {
+            int Yaw;
+            if (com.getIsStool() == 1)
+            {
+                Yaw = this.Stool.getSofaOrientation(block);
+            } else
+            {
+                Yaw = block.getData();
+            }
+            Loc.setYaw(this.Stool.Rotati(Yaw));//поворот игрока
+        }
+        player.teleport(Loc);//опускаем игрока на пол блока и центруем
+        Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x4), false);
+
+        //функция для комманд на табличках
+        commandOnSign(player, com, block);
+        for (Player p : getServer().getOnlinePlayers())//если игрок онлайн
+        {
+            //применяем изменения
+            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+        }
+        this.Stool.getSittingPlayers().put(player, block);
+        this.Stool.getSittingPlayersNameFalg().put(player.getDisplayName(), false);
+    }
+
+//Метод вставания игрока
+    public void standUp(Player player)
+    {
+        Location loc = player.getLocation();
+        loc.add(0f, 1f, 0f);
+
+        if (player.getGameMode() != GameMode.CREATIVE)
+        {
+            player.setAllowFlight(!player.getAllowFlight());
+            player.setFlying(player.getAllowFlight());
+        }
+        Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x00), false);
+        //Выводим сообщение если надо
+        this.messageLogic.PrintMessageStandUp(player);
+
+        for (Player p : getServer().getOnlinePlayers())
+        {
+            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+        }
+
+        if (this.CommamdsUser.containsKey(player))
+        {
+            this.powered.poweredDisable(player);
+            this.CommamdsUser.remove(player);
+        }
+        this.Stool.getSittingPlayers().remove(player);
+        this.Stool.getSittingPlayersNameFalg().remove(player.getDisplayName());
+        player.setSneaking(false);
+        player.teleport(loc);//Подкидываем что бы не провалился сквозь пол :)
+    }
+
+    private void HelpMessage(CommandSender sender)
+    {
+        sender.sendMessage(
+                "/sofa reload " + lang.getMessagePlugin("HELP_RELOAD")
+                + "§f\n /sofa version " + lang.getMessagePlugin("OR") + "§e /sofa ver" + lang.getMessagePlugin("HELP_VERSION")
+                + "§f\n /sofa addmessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("FOR_ADD_NEW_MESSAGE")
+                + "§f\n /sofa settimeout <0..long.Max> " + lang.getMessagePlugin("TO_CHANGE_DEALY_INTERVAL_REMESSAGES")
+                + "§f\n /sofa setstartmessage <\"String\"> " + lang.getMessagePlugin("CHANGE_FIRST_PART_OF_MESSAGE")
+                + "§f\n /sofa setrestoreshealth <true/false> " + lang.getMessagePlugin("RESTORE_HEALTH_OF_THE_PLAYERS_WHEN_SITS")
+                + "§f\n /sofa changemessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("CHANGE_MESSAGE_FOR_SPECIFIED_USER")
+                + "§f\n /sofa cm <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("CHANGE_MESSAGE_FOR_CURRENT_USER")
+                + "§f\n /sofa removemessage <NikName> <true/false> <\"String\"> <true/false> <\"String\"> " + lang.getMessagePlugin("REMOVE_MESSAGE_FOR_SPECIFIED_USER")
+                + "§f\n /sofa changeenable <true/false> " + lang.getMessagePlugin("CANT_PLAYERS_FIND_ITEMS")
+                + "§f\n /sofa setlanguage <Lang> " + "§eTo change the language / Для смены языка");
     }
 }

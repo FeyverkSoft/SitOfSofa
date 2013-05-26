@@ -662,6 +662,7 @@ pluginlang:
           'YOU_FOUND_ON_CHAIR': '§eВы нашли следующие предметы на стуле:'
           'AVAILABLE_NEW_VERSION': '§eДоступна новая версия этой программы'
           'YOU_CAN_DOWNLOAD_IT': '§eВы можете скачать её по ссылке '
+          'INCORRECT_COMMAND_ON_SIGN': '§eНекорректная комманда на табличке.'
      English:
           'OR': 're'
           'AND': 'and'
@@ -702,3 +703,4 @@ pluginlang:
           'YOU_FOUND_ON_CHAIR': '§eYou have found the following items on the chair:'
           'AVAILABLE_NEW_VERSION': '§eAvailable new version this program.'
           'YOU_CAN_DOWNLOAD_IT': '§eYou can download it on the link '
+          'INCORRECT_COMMAND_ON_SIGN': '§eIncorrect command on sign.'

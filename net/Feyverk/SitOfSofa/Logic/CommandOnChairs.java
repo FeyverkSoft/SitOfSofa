@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.Feyverk.SitOfSofa.SitOfSofa;
 import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -24,47 +25,30 @@ public class CommandOnChairs
      * Карта где ключ это игрок а значение время когда происходило событие
      */
     private HashMap<Player, TimeOut> timeOutMap;
-
     /**
-     * Карта где ключ это игрок а значение время когда происходило событие
-     *
-     * @return возвращает карту где ключ это игрок а значение время когда
-     * происходило событие
+     * Это стул? -1 нет, 0 скамейка, 1 кресло
      */
-    public HashMap<Player, TimeOut> getTimeOutMap()
-    {
-        if (this.timeOutMap == null)
-        {
-            this.timeOutMap = new HashMap<>();
-        }
-        return this.timeOutMap;
-    }
-
-    /**
-     * Проверяет является ли строка числом Int
-     *
-     * @param string строка для проверки
-     * @return true является, false не является
-     */
-    private boolean isInt(String string)
-    {
-        try
-        {
-            Integer.parseInt(string);
-        } catch (NumberFormatException e)
-        {
-            player.sendMessage("Incorrect command on sign.");
-            return false;
-        }
-        return true;
-    }
-    private int isStool = -1;//Это стул??
+    private int isStool = -1;
     /**
      * Длинна скамейки
      */
     private int lenght = 0;
+    /**
+     * Блок на который тыкнул юзвер
+     */
     private Block _block;
+    /**
+     * Игрок совершивший действие
+     */
     private Player player;
+    /**
+     * список строк с возможными коммандами
+     */
+    private List<String> textOnSignList;
+    /**
+     * Список строк с коммандами
+     */
+    private List<String> commandList;
 
     /**
      * Задаёт крайний блок скамейки для которой выполняются комманды
@@ -100,19 +84,77 @@ public class CommandOnChairs
         return this.lenght;
     }
 
-    public CommandOnChairs()
+    /**
+     * Карта где ключ это игрок а значение время когда происходило событие
+     *
+     * @return возвращает карту где ключ это игрок а значение время когда
+     * происходило событие
+     */
+    public HashMap<Player, TimeOut> getTimeOutMap()
     {
+        if (this.timeOutMap == null)
+        {
+            this.timeOutMap = new HashMap<>();
+        }
+        return this.timeOutMap;
     }
 
+    /**
+     * Проверяет является ли строка числом Int
+     *
+     * @param string строка для проверки
+     * @return true является, false не является
+     */
+    private boolean isInt(String string)
+    {
+        try
+        {
+            Integer.parseInt(string);
+        } catch (NumberFormatException e)
+        {
+            getPlayer().sendMessage(SitOfSofa.lang.getMessagePlugin("INCORRECT_COMMAND_ON_SIGN") + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Инициализирует объект типа CommandOnChairs значениями по умолчанию
+     */
+    public CommandOnChairs()
+    {
+        this.timeOutMap = new HashMap<>();
+    }
+
+    /**
+     * Конструктор инициализирует объект класса значениями
+     *
+     * @param isStool параметр результата распознования стула
+     */
     public CommandOnChairs(Integer isStool)
     {
         this.timeOutMap = new HashMap<>();
         setIsStool(isStool);
     }
 
+    /**
+     * Задать игрока
+     *
+     * @param player Игрок
+     */
     public void setPlayer(Player player)
     {
         this.player = player;
+    }
+
+    /**
+     * Получает игрока
+     *
+     * @return
+     */
+    public Player getPlayer()
+    {
+        return this.player;
     }
 
     /**
@@ -130,11 +172,6 @@ public class CommandOnChairs
             this.lenght = 0;
         }
     }
-    private List<String> textOnSignList;//список строк с возможными коммандами
-    /**
-     * Список строк с коммандами
-     */
-    private List<String> commandList;
 
     /**
      * Получает принадлежат ли эти комманды стулу или нет
@@ -217,12 +254,12 @@ public class CommandOnChairs
     {
         List<String> _Temp = new ArrayList<>();
         String text = getTextOnSignList().toString().replace(" ", "").replace(",", "").toLowerCase();
-        text = text.replace("_xp", player.getTotalExperience() + "").replace("_lvl", player.getLevel() + "").
-                replace("_health", player.getHealth() + "").
-                replace("_gm", player.getGameMode().getValue() + "").replace("_food", player.getFoodLevel() + "");
+        text = text.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
+                replace("_health", getPlayer().getHealth() + "").
+                replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
         text = text.substring(1, text.length() - 1);
         //LOG.info(text.substring(1, text.length() - 1));
-        //  LOG.info(POLIZ.sortingStation(text.substring(1, text.length() - 1),"(",")"));
+        LOG.info(POLIZ.MyReverls("!(5+8)-9"));
         Matcher matcher = Pattern.compile("\\[([^\\[\\]]+?)\\]").matcher(text);
         //LOG.info(text);
         while (matcher.find())
@@ -563,34 +600,34 @@ public class CommandOnChairs
         if (isAddXp())
         {
             int[] t = getXpCount();
-            if (!getTimeOutMap().containsKey(player))
+            if (!getTimeOutMap().containsKey(getPlayer()))
             {
-                getTimeOutMap().put(player, new TimeOut(0, 0, 0));
+                getTimeOutMap().put(getPlayer(), new TimeOut(0, 0, 0));
             }
-            if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comXpAddTime() <= t[1]))
+            if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comXpAddTime() <= t[1]))
             {
                 if (t[0] >= 0)
                 {
-                    player.giveExp(t[0]);
+                    getPlayer().giveExp(t[0]);
                 } else
                 {
-                    int _Temp = player.getTotalExperience();
+                    int _Temp = getPlayer().getTotalExperience();
                     _Temp += t[0];
                     if (_Temp >= 0)
                     {
-                        player.setTotalExperience(0);
-                        player.setLevel(0);
-                        player.setExp(0.0F);
-                        player.giveExp(_Temp);
+                        getPlayer().setTotalExperience(0);
+                        getPlayer().setLevel(0);
+                        getPlayer().setExp(0.0F);
+                        getPlayer().giveExp(_Temp);
                     } else
                     {
-                        player.setTotalExperience(0);
-                        player.setLevel(0);
-                        player.setExp(0.0F);
-                        player.giveExp(0);
+                        getPlayer().setTotalExperience(0);
+                        getPlayer().setLevel(0);
+                        getPlayer().setExp(0.0F);
+                        getPlayer().giveExp(0);
                     }
                 }
-                getTimeOutMap().get(player).set_comXpAddTime(System.currentTimeMillis());
+                getTimeOutMap().get(getPlayer()).set_comXpAddTime(System.currentTimeMillis());
             }
         }
         return true;
@@ -607,9 +644,9 @@ public class CommandOnChairs
     {
         if (isClearXp())
         {
-            player.setTotalExperience(0);
-            player.setLevel(0);
-            player.setExp(0.0F);
+            getPlayer().setTotalExperience(0);
+            getPlayer().setLevel(0);
+            getPlayer().setExp(0.0F);
             return true;
         }
         return false;
@@ -629,23 +666,23 @@ public class CommandOnChairs
             if (isGiveItem())
             {
                 Map<ItemStack, Long> _Map = getItemStack();
-                if (!getTimeOutMap().containsKey(player))
+                if (!getTimeOutMap().containsKey(getPlayer()))
                 {
                     LOG.info("0");
-                    getTimeOutMap().put(player, new TimeOut());
+                    getTimeOutMap().put(getPlayer(), new TimeOut());
                 } else
                 {
                     for (Map.Entry<ItemStack, Long> entry : _Map.entrySet())
                     {
-                        if (!getTimeOutMap().get(player).get_comGiveItem().containsKey(entry.getKey()))
+                        if (!getTimeOutMap().get(getPlayer()).get_comGiveItem().containsKey(entry.getKey()))
                         {
-                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), 0l);
+                            getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), 0l);
                         }
-                        if (!(System.currentTimeMillis() - getTimeOutMap().get(player).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
+                        if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
                         {
-                            player.getInventory().addItem(entry.getKey());
-                            getTimeOutMap().get(player).get_comGiveItem().remove(entry.getKey());
-                            getTimeOutMap().get(player).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
+                            getPlayer().getInventory().addItem(entry.getKey());
+                            getTimeOutMap().get(getPlayer()).get_comGiveItem().remove(entry.getKey());
+                            getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
                         }
 
                     }
@@ -667,7 +704,7 @@ public class CommandOnChairs
             int h = getHealhCount();
             if (h >= 0)
             {
-                player.setHealth(h);
+                getPlayer().setHealth(h);
             }
         }
     }
@@ -686,7 +723,7 @@ public class CommandOnChairs
                 setHealth();
                 if (isKillAll())// если надо убить то убиваем
                 {
-                    player.setHealth(0);
+                    getPlayer().setHealth(0);
                 }
             }
         });
