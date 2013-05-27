@@ -10,6 +10,13 @@ import java.util.logging.Logger;
 public class POLIZ
 {
 
+    /**
+     * Метод получения приоритета операции при формировании обратной польской
+     * нотации
+     *
+     * @param formula формуля которая будет представленна в виде POLIZ
+     * @return Строка представляющаяя формулу в виде ПОЛИЗ
+     */
     public static String MyReverls(String formula)
     {
         String rezNotation = ""; // Результирующая запись
@@ -73,8 +80,12 @@ public class POLIZ
         return rezNotation;
     }
 
-// Метод получения приоритета операции при формировании обратной польской
-// нотации
+    /**
+     * Приоритеты операторов
+     *
+     * @param a - оператор
+     * @return приоритет оператора
+     */
     private static int prior(char a)
     {
         switch (a)
@@ -105,6 +116,30 @@ public class POLIZ
                 return 1;
         }
         return 0;
+    }
+
+    /**
+     * Вычисляет численное значение указаной ПОЛИЗ
+     *
+     * @param poliz запись выражения в виде ПОЛИЗ
+     * @return число ответ
+     */
+    public static Double numbersCalculate(String poliz)
+    {
+        String[] _Temp = poliz.split(" ");
+        return 0d;
+    }
+
+    /**
+     * Вычисляет логическое значение указаной ПОЛИЗ
+     *
+     * @param poliz запись выражения в виде ПОЛИЗ
+     * @return логическое значение результат truе/false
+     */
+    public static Boolean logicCalculate(String poliz)
+    {
+        String[] _Temp = poliz.split(" ");
+        return false;
     }
     private static final Logger LOG = Logger.getLogger(POLIZ.class.getName());
 }
