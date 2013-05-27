@@ -1,9 +1,11 @@
 package net.Feyverk.SitOfSofa.Logic;
 
+import com.avaje.ebeaninternal.server.el.ElSetValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -245,6 +247,22 @@ public class CommandOnChairs
         }
     }
 
+    void Analis(String text)
+    {
+        if (text.indexOf("_if(") != -1)
+        {
+            int i = text.indexOf("_if(") + 3;
+            String _Tempc = "";
+            while (text.charAt(i) != '{' && i < text.length())
+            {
+                _Tempc += text.charAt(i);
+                i++;
+            }
+            LOG.info(_Tempc);
+            LOG.info(POLIZ.MyReverls(_Tempc));
+        }
+    }
+
     /**
      * Возвращает Строки в которых содержатся комманды
      *
@@ -258,10 +276,8 @@ public class CommandOnChairs
                 replace("_health", getPlayer().getHealth() + "").
                 replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
         text = text.substring(1, text.length() - 1);
-        //LOG.info(text.substring(1, text.length() - 1));
-        LOG.info(POLIZ.MyReverls("!(5+8)-9"));
         Matcher matcher = Pattern.compile("\\[([^\\[\\]]+?)\\]").matcher(text);
-        //LOG.info(text);
+        Analis(text);
         while (matcher.find())
         {
             text = matcher.group(1);

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.Feyverk.SitOfSofa.Logic;
 
 import java.util.Stack;
@@ -46,7 +42,10 @@ public class POLIZ
                     || (formula.charAt(i) == '|')
                     || (formula.charAt(i) == '%')
                     || (formula.charAt(i) == '&')
-                    || (formula.charAt(i) == '!'))
+                    || (formula.charAt(i) == '!')
+                    || (formula.charAt(i) == '=')
+                    || (formula.charAt(i) == '<')
+                    || (formula.charAt(i) == '>'))
             {
                 if (stack.size() == 0)
                 {
@@ -58,18 +57,18 @@ public class POLIZ
                 } else
                 {
                     while ((stack.size() != 0) && (prior(String.valueOf(stack.peek())
-                            .charAt(0)) >= prior(formula
-                            .charAt(i))))
+                            .charAt(0)) >= prior(formula.charAt(i))))
                     {
                         outString.push(stack.pop());
                     }
                     stack.push(formula.charAt(i));
                 }
+                outString.push(' ');
             }
         }
         for (int i1 = 0; i1 < outString.size(); i1++)
         {
-            rezNotation = rezNotation + String.valueOf(outString.get(i1));
+            rezNotation += outString.get(i1);
         }
         return rezNotation;
     }
@@ -83,9 +82,15 @@ public class POLIZ
             case '!':
                 return 4;
             case '&':
-                return 3;
+                return 2;
+            case '<':
+                return 2;
+            case '>':
+                return 2;
+            case '=':
+                return 2;
             case '|':
-                return 3;
+                return 2;
             case '*':
                 return 3;
             case '/':
