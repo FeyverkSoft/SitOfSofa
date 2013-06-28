@@ -14,7 +14,7 @@ public class POLIZ
      * Метод получения приоритета операции при формировании обратной польской
      * нотации
      *
-     * @param formula формуля которая будет представленна в виде POLIZ
+     * @param formula формула которая будет представленна в виде POLIZ
      * @return Строка представляющаяя формулу в виде ПОЛИЗ
      */
     public static String MyReverls(String formula)
@@ -52,15 +52,23 @@ public class POLIZ
                     || (formula.charAt(i) == '!')
                     || (formula.charAt(i) == '=')
                     || (formula.charAt(i) == '<')
-                    || (formula.charAt(i) == '>'))
+                    || (formula.charAt(i) == '>')
+                    || (formula.charAt(i) == '≥')
+                    || (formula.charAt(i) == '≤')
+                    || (formula.charAt(i) == '≠'))
             {
+                outString.push(' ');
                 if (stack.size() == 0)
                 {
+                    outString.push(' ');
                     stack.push(formula.charAt(i));
+                    outString.push(' ');
                 } else if (prior(formula.charAt(i)) > prior(String.valueOf(
                         stack.peek()).charAt(0)))
                 {
+                    outString.push(' ');
                     stack.push(formula.charAt(i));
+                    outString.push(' ');
                 } else
                 {
                     while ((stack.size() != 0) && (prior(String.valueOf(stack.peek())
@@ -68,6 +76,7 @@ public class POLIZ
                     {
                         outString.push(stack.pop());
                     }
+                    outString.push(' ');
                     stack.push(formula.charAt(i));
                 }
                 outString.push(' ');
@@ -77,7 +86,7 @@ public class POLIZ
         {
             rezNotation += outString.get(i1);
         }
-        return rezNotation;
+        return rezNotation.replaceAll("  ", " ");
     }
 
     /**
@@ -92,27 +101,23 @@ public class POLIZ
         {
             case '!':
                 return 4;
-            case '&':
-                return 2;
-            case '<':
-                return 2;
-            case '>':
-                return 2;
-            case '=':
-                return 2;
-            case '|':
-                return 2;
             case '*':
-                return 3;
             case '/':
-                return 3;
             case '%':
                 return 3;
+            case '&':
+            case '<':
+            case '>':
+            case '≥':
+            case '≤':
+            case '≠':
+            case '=':
+            case '|':
             case '-':
-                return 2;
             case '+':
                 return 2;
             case '(':
+            case ')':
                 return 1;
         }
         return 0;
@@ -126,8 +131,48 @@ public class POLIZ
      */
     public static Double numbersCalculate(String poliz)
     {
-        String[] _Temp = poliz.split(" ");
-        return 0d;
+        Stack<Double> stack = new Stack<>();
+        LOG.info(poliz);
+        String[] Split_POLIZ = poliz.split(" ");//режем текст по пробелам
+        String str = "";
+        for (String st : Split_POLIZ)
+        {
+            str = st.replace(" ", "");//На всякий случай грязный хак
+            if (!"".equals(str))
+            {
+                if (!"+".equals(str) && !"-".equals(str) && !"*".equals(str) && !"/".equals(str) && !"%".equals(str))
+                {
+                    stack.push(Double.parseDouble(str));
+                } else
+                {
+                    switch (str)
+                    {
+                        case "+":
+                            stack.push(stack.pop() + stack.pop());
+                            break;
+                        case "-":
+                            stack.push(stack.pop() - stack.pop());
+                            break;
+                        case "*":
+                            stack.push(stack.pop() * stack.pop());
+                            break;
+                        case "/":
+                            stack.push(stack.pop() / stack.pop());
+                            break;
+                        case "%":
+                            stack.push(stack.pop() % stack.pop());
+                            break;
+                    }
+                }
+            }
+        }
+        if (stack.size() == 1)
+        {
+            return stack.pop();
+        } else
+        {
+            return 0d;
+        }
     }
 
     /**

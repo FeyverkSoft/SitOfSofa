@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -249,6 +250,22 @@ public class CommandOnChairs
 
     void Analis(String text)
     {
+        Map<String, Double> ListMat = new TreeMap<>();
+        //Выдёргиваем математические выражаения
+        Matcher matcher = Pattern.compile("(([\\+\\-\\/\\*\\^]?)([(]*(([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*)?(([(]*([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*)?([\\+\\-\\/\\*\\^])([(]*(([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*))+").matcher(text);
+        while (matcher.find())
+        {
+            String text1 = matcher.group(1);
+            if (text1.charAt(0) == '(')
+            {
+                text1 = text1.substring(1);
+            } else if (text1.charAt(text1.length() - 1) == ')')
+            {
+                text1 = text1.substring(0, text1.length() - 1);
+            }
+            ListMat.put(text1, POLIZ.numbersCalculate(POLIZ.MyReverls(text1)));
+        }
+        LOG.info(ListMat.toString());
         if (text.indexOf("_if(") != -1)
         {
             int i = text.indexOf("_if(") + 3;
@@ -275,6 +292,7 @@ public class CommandOnChairs
         text = text.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
                 replace("_health", getPlayer().getHealth() + "").
                 replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
+        text = text.replace(">=", "≥").replace("<=", "≤").replace("!=", "≠").replace("==", "=").replace("&&", "&").replace("||", "|");
         text = text.substring(1, text.length() - 1);
         Matcher matcher = Pattern.compile("\\[([^\\[\\]]+?)\\]").matcher(text);
         Analis(text);
