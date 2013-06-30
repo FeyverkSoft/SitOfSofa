@@ -1,12 +1,9 @@
 package net.Feyverk.SitOfSofa.Logic;
 
-import com.avaje.ebeaninternal.server.el.ElSetValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -248,9 +245,17 @@ public class CommandOnChairs
         }
     }
 
-    void Analis(String text)
+    /**
+     * Возвращает новую строку полученную в результате пременения анализа на
+     * наличе формул
+     *
+     * @param text
+     * @return Возвращает новую строку полученную в результате пременения
+     * анализа на наличе формул
+     */
+    String MatimatAnalis(String text)
     {
-        Map<String, Double> ListMat = new TreeMap<>();
+        String _TempText = text;
         //Выдёргиваем математические выражаения
         Matcher matcher = Pattern.compile("(([\\+\\-\\/\\*\\^]?)([(]*(([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*)?(([(]*([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*)?([\\+\\-\\/\\*\\^])([(]*(([(]?(([+-]?\\d+[.,]?(\\d+)?)([e][+-]\\d+)?)[)]?)|([(]?value[)]?))[)]*))+").matcher(text);
         while (matcher.find())
@@ -263,21 +268,13 @@ public class CommandOnChairs
             {
                 text1 = text1.substring(0, text1.length() - 1);
             }
-            ListMat.put(text1, POLIZ.numbersCalculate(POLIZ.MyReverls(text1)));
+            LOG.info(text1);
+            String num = POLIZ.numbersCalculate(text1).toString();
+            LOG.info(num);
+            _TempText = _TempText.replace(text1, num);
         }
-        LOG.info(ListMat.toString());
-        if (text.indexOf("_if(") != -1)
-        {
-            int i = text.indexOf("_if(") + 3;
-            String _Tempc = "";
-            while (text.charAt(i) != '{' && i < text.length())
-            {
-                _Tempc += text.charAt(i);
-                i++;
-            }
-            LOG.info(_Tempc);
-            LOG.info(POLIZ.MyReverls(_Tempc));
-        }
+        LOG.info(_TempText);
+        return _TempText;
     }
 
     /**
@@ -288,21 +285,76 @@ public class CommandOnChairs
     private List<String> extractCommand()
     {
         List<String> _Temp = new ArrayList<>();
-        String text = getTextOnSignList().toString().replace(" ", "").replace(",", "").toLowerCase();
-        text = text.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
-                replace("_health", getPlayer().getHealth() + "").
-                replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
-        text = text.replace(">=", "≥").replace("<=", "≤").replace("!=", "≠").replace("==", "=").replace("&&", "&").replace("||", "|");
-        text = text.substring(1, text.length() - 1);
-        Matcher matcher = Pattern.compile("\\[([^\\[\\]]+?)\\]").matcher(text);
-        Analis(text);
-        while (matcher.find())
+        String _Text = getTextOnSignList().toString().replace(" ", "").replace(",", "").toLowerCase().
+                replace(">=", "≥").replace("<=", "≤").replace("!=", "≠").replace("==", "=").replace("&&", "&").replace("||", "|"),
+                ParseText = "";
+
+
+        _Text = _Text.substring(1, _Text.length() - 1);
+
+        for (Integer i = 0; i < _Text.length(); i++)
         {
-            text = matcher.group(1);
-            _Temp.add(text);
+            if (_Text.charAt(i) == '_' && i + 1 < _Text.length())
+            {
+                if (_Text.charAt(i + 1) == 'i' || _Text.charAt(i + 1) == 'e' || _Text.charAt(i + 1) == 'w')
+                {
+                    while (_Text.charAt(i) != '{' && i < _Text.length())
+                    {
+                        ParseText += _Text.charAt(i);
+                        i++;
+                    }
+                    _Temp.add(ParseText);
+                    ParseText = "";
+                    _Temp.add("_BEGIN");
+                }
+            }
+
+            if (_Text.charAt(i) == '}')
+            {
+                _Temp.add("_END");
+            }
+
+            if (_Text.charAt(i) == '[')
+            {
+                i++;
+                while (_Text.charAt(i) != ']' && i < _Text.length())
+                {
+                    ParseText += _Text.charAt(i);
+                    i++;
+                }
+                _Temp.add(ParseText);
+                ParseText = "";
+            }
+
         }
-        //LOG.info(_Temp.toString());
+
+        LOG.info(_Temp.toString());
+
+
+
+        /* for (String s : getTextOnSignList())
+         {
+         String _s = s.replace(" ", "").replace(",", "").toLowerCase();
+         _s = _s.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
+         replace("_health", getPlayer().getHealth() + "").
+         replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
+         LOG.info(_s);
+         }*/
         return _Temp;
+    }
+
+    /**
+     * Метод выполняет комады описанные на стуле для игрока.
+     */
+    public void ExecuteCommands()
+    {
+        List<String> CommandsList = extractCommand();
+        for (String s : CommandsList)
+        {
+            String _Temp = s.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
+                    replace("_health", getPlayer().getHealth() + "").
+                    replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
+        }
     }
 
     /**
