@@ -1,7 +1,6 @@
 package net.Feyverk.SitOfSofa.Logic;
 
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 import net.Feyverk.SitOfSofa.Structures.PlayersBenchs;
 import org.bukkit.Material;
@@ -97,11 +96,9 @@ public class PoweredLogic
      * @param block блок скамейки
      * @param flag Флаг
      */
-    public void poweredEnable(Block block, Player player, CommandOnChairs com)
+    public void poweredEnable(Block block, Block endBlock, Player player, Integer Lenght, Boolean isPoweredAll)
     {
-        Block endBlock = com.getBlock();
-        Integer Lenght = com.getLenght();
-        if (com.isPoweredAll())
+        if (isPoweredAll)
         {
             //LOG.info(endBlock.toString());
             list.addPlayerBlock(player, endBlock);
@@ -119,7 +116,7 @@ public class PoweredLogic
                     addPowerBlock(endBlock.getRelative(i - (Lenght - 1), 0, 0), player);
                 }
             }
-        } else if (com.isPowered())
+    } else
         {
             addPowerBlock(block, player);
         }

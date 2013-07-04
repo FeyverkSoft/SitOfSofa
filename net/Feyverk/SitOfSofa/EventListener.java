@@ -40,7 +40,7 @@ import org.bukkit.event.block.SignChangeEvent;
 public class EventListener implements Listener
 {
 
-    public SitOfSofa plugin;
+    private SitOfSofa plugin;
 
     public EventListener(SitOfSofa plugin)
     {
@@ -77,23 +77,20 @@ public class EventListener implements Listener
                 plugin.standUp(player);
                 return;
             }
-            
+
             // проверяем разрешения на посадку
             if (!player.hasPermission("sofa.sit"))
             {
                 return;
             }
-            
+
             CommandOnChairs com = plugin.Stool.checkChair(block);//комманды на стуле
             //-1 не стул, 0 - скамья, 1 - диван
             int type = com.getIsStool();
             if (type != -1)
             {
                 com.setPlayer(player);
-                if (!com.isPrivate(player))
-                {
-                    return;
-                }
+                com.setSitingBlock(block);
                 // Check if player is sneaking.
                 if (plugin.sneaking == false || (plugin.sneaking == true && player.isSneaking()))
                 {

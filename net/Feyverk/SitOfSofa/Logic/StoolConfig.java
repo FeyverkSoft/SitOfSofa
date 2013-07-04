@@ -843,32 +843,6 @@ public class StoolConfig extends FunctionalConfiguration
         }
         return 0f;
     }
-
-    public boolean poweredAllC(Block block, CommandOnChairs com, Player player)
-    {
-        if (com.isPoweredAll())
-        {
-            int X = 0, Z = 0;//получаем координаты
-            int data = block.getData(); //Получаем ориентацию ступенек
-            if (data == 1 || data == 0)//ориентация на север или юг
-            {
-                //бежим до конца ступенек по ряду
-                while (getSittingBenchBlocks().containsKey(getTypeString(block.getRelative(0, 0, Z))))
-                {
-                    stoolBlock.put(block.getRelative(0, 0, Z), player);
-                    //block.getRelative(0, 0, Z).getBlockPower();
-                    Z++;
-                }
-            } else
-            {
-                while (getSittingBenchBlocks().containsKey(getTypeString(block.getRelative(X, 0, 0))))
-                {
-                    stoolBlock.put(block.getRelative(0, 0, Z), player);
-                    X++;
-                }
-            }
-        }
-        return true;
-    }
+    
     private static final Logger LOG = Logger.getLogger(StoolConfig.class.getName());
 }

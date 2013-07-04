@@ -51,11 +51,11 @@ public class SitOfSofa extends JavaPlugin
     private File pluginFolder;//папка с конфигурацией плагина
     private File configFile; //конфигурационный файл
     boolean antifallThrough = false;
-    MessageLogic messageLogic; //Сообщения
+    public static MessageLogic messageLogic; //Сообщения
     StoolConfig Stool;
     Update u;//Объект проверки обновлений
     MetricsLite metricsLite;//метрика
-    PoweredLogic powered;//объект отвечающий за электро стулья
+    public static PoweredLogic powered;//объект отвечающий за электро стулья
     Map<Player, CommandOnChairs> CommamdsUser;//карта комманды пользователь
 
     @Override
@@ -120,7 +120,7 @@ public class SitOfSofa extends JavaPlugin
                             }
                             try
                             {
-                                if (!this.messageLogic.AddUser(sender, args))
+                                if (!messageLogic.AddUser(sender, args))
                                 {
                                     sender.sendMessage(lang.getMessagePlugin("INCORRECTLY_STRING"));
                                 } else
@@ -144,7 +144,7 @@ public class SitOfSofa extends JavaPlugin
                         }
                         try
                         {
-                            if (this.messageLogic.ChangeTimeOut(Long.parseLong(args[1])))
+                            if (messageLogic.ChangeTimeOut(Long.parseLong(args[1])))
                             {
                                 sender.sendMessage(lang.getMessagePlugin("SET_NEW_TIMEOUT"));
                             }
@@ -166,7 +166,7 @@ public class SitOfSofa extends JavaPlugin
                             {
                                 temp += args[i] + " ";
                             }
-                            if (this.messageLogic.ChangeStartMessage(temp))
+                            if (messageLogic.ChangeStartMessage(temp))
                             {
                                 sender.sendMessage(lang.getMessagePlugin("CHANGES_ARE_SAVED"));
                             }
@@ -185,7 +185,7 @@ public class SitOfSofa extends JavaPlugin
                         {
                             if (args.length == 2 && (args[1].compareTo("true") == 0 || args[1].compareTo("false") == 0))
                             {
-                                if (this.messageLogic.ChangeRestoresHealth(args[1].compareTo("true") == 0 ? true : false))
+                                if (messageLogic.ChangeRestoresHealth(args[1].compareTo("true") == 0 ? true : false))
                                 {
                                     sender.sendMessage(lang.getMessagePlugin("CHANGES_ARE_SAVED"));
                                 } else
@@ -377,7 +377,7 @@ public class SitOfSofa extends JavaPlugin
         LOG.info("[SitOfSofa] Config Stool load.");
         LOG.info("[SitOfSofa] Message and chance settings loading...");
         //инициализируем и загружаем конфиг для сообщений
-        this.messageLogic = new MessageLogic("usermessageAndChance.yml", getDataFolder(), true);
+        messageLogic = new MessageLogic("usermessageAndChance.yml", getDataFolder(), true);
         LOG.info("[SitOfSofa] Message and chance settings load.");
         if (this.antifallThrough)
         {
@@ -455,16 +455,14 @@ public class SitOfSofa extends JavaPlugin
         try
         {
             //Выводим сообщение если надо
-            this.messageLogic.PrintMessageSitdown(player);
+            messageLogic.PrintMessageSitdown(player);
             //Шанс получить предмет
-            this.messageLogic.comeСhance(player, com.isChance());
+            messageLogic.comeСhance(player, com.isChance());
             //Вызываем метод восстановления здоровья
-            this.messageLogic.restoreHealth(player, com.isRestoreHealth());
-            //Активириуем редстоун если указано на табличках
-            this.powered.poweredEnable(block, player, com);
-            if (!this.CommamdsUser.containsKey(player))
+            messageLogic.restoreHealth(player, com.isRestoreHealth());
+            if (!CommamdsUser.containsKey(player))
             {
-                this.CommamdsUser.put(player, com);
+                CommamdsUser.put(player, com);
             }
             com.Run();
         } catch (Exception e)
@@ -522,20 +520,20 @@ public class SitOfSofa extends JavaPlugin
         }
         Packet40EntityMetadata packet = new Packet40EntityMetadata(player.getEntityId(), new SittingDataWatcher((byte) 0x00), false);
         //Выводим сообщение если надо
-        this.messageLogic.PrintMessageStandUp(player);
+        messageLogic.PrintMessageStandUp(player);
 
         for (Player p : getServer().getOnlinePlayers())
         {
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
         }
 
-        if (this.CommamdsUser.containsKey(player))
+        if (CommamdsUser.containsKey(player))
         {
-            this.powered.poweredDisable(player);
-            this.CommamdsUser.remove(player);
+            powered.poweredDisable(player);
+            CommamdsUser.remove(player);
         }
-        this.Stool.getSittingPlayers().remove(player);
-        this.Stool.getSittingPlayersNameFalg().remove(player.getDisplayName());
+        Stool.getSittingPlayers().remove(player);
+        Stool.getSittingPlayersNameFalg().remove(player.getDisplayName());
         player.setSneaking(false);
         player.teleport(loc);//Подкидываем что бы не провалился сквозь пол :)
     }

@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.Feyverk.SitOfSofa.EventListener;
 import net.Feyverk.SitOfSofa.SitOfSofa;
 import net.Feyverk.SitOfSofa.Structures.TimeOut;
 import org.bukkit.block.Block;
@@ -38,6 +39,10 @@ public class CommandOnChairs
      */
     private Block _block;
     /**
+     * Блок на который сел юзер
+     */
+    private Block SitingBlock;
+    /**
      * Игрок совершивший действие
      */
     private Player player;
@@ -61,6 +66,16 @@ public class CommandOnChairs
     }
 
     /**
+     * Задаёт блок скамейки на который сел юзер
+     *
+     * @param _block блок
+     */
+    public void setSitingBlock(Block _block)
+    {
+        this.SitingBlock = _block;
+    }
+
+    /**
      * Возвращает крайний блок скамейки для которой выполняются команды
      *
      * @return
@@ -68,6 +83,16 @@ public class CommandOnChairs
     public Block getBlock()
     {
         return _block;
+    }
+
+    /**
+     * Возвращает блок скамейки на который сел юзер
+     *
+     * @return
+     */
+    public Block getSitingBlock()
+    {
+        return SitingBlock;
     }
 
     /**
@@ -268,28 +293,33 @@ public class CommandOnChairs
             {
                 text1 = text1.substring(0, text1.length() - 1);
             }
-            LOG.info(text1);
+            //LOG.info(text1);
             String num = POLIZ.numbersCalculate(text1).toString();
-            LOG.info(num);
+            //LOG.info(num);
             _TempText = _TempText.replace(text1, num);
         }
-        LOG.info(_TempText);
+        //LOG.info(_TempText);
         return _TempText;
     }
 
     /**
      * Возвращает Строки в которых содержатся комманды
      *
-     * @return Возвращает Строки в которых содержатся комманды
+     * @return Возвращает Строки в которых содержатся паскалеподобные комманды
      */
     private List<String> extractCommand()
     {
         List<String> _Temp = new ArrayList<>();
-        String _Text = getTextOnSignList().toString().replace(" ", "").replace(",", "").toLowerCase().
-                replace(">=", "≥").replace("<=", "≤").replace("!=", "≠").replace("==", "=").replace("&&", "&").replace("||", "|"),
-                ParseText = "";
+        String _Text = "", ParseText = "";
+        //склеиваем в строку
+        for (String s : getTextOnSignList())
+        {
+            _Text += s;
+        }
 
-
+        //заменяем объёмные операторы на мелкие аналоги
+        _Text = _Text.replace(" ", "").toLowerCase().
+                replace(">=", "≥").replace("<=", "≤").replace("!=", "≠").replace("==", "=").replace("&&", "&").replace("||", "|").replace("++", "+1").replace("--", "-1");
         _Text = _Text.substring(1, _Text.length() - 1);
 
         for (Integer i = 0; i < _Text.length(); i++)
@@ -305,15 +335,17 @@ public class CommandOnChairs
                     }
                     _Temp.add(ParseText);
                     ParseText = "";
+                    //начало блока
                     _Temp.add("_BEGIN");
                 }
             }
 
+            // окончание блока
             if (_Text.charAt(i) == '}')
             {
                 _Temp.add("_END");
             }
-
+            //вычлиняю саму комманду
             if (_Text.charAt(i) == '[')
             {
                 i++;
@@ -327,20 +359,114 @@ public class CommandOnChairs
             }
 
         }
-
         LOG.info(_Temp.toString());
-
-
-
-        /* for (String s : getTextOnSignList())
-         {
-         String _s = s.replace(" ", "").replace(",", "").toLowerCase();
-         _s = _s.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
-         replace("_health", getPlayer().getHealth() + "").
-         replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
-         LOG.info(_s);
-         }*/
         return _Temp;
+    }
+
+    /**
+     * Возвращает строку к которой были пременены определенные правила
+     * преобразующие все вычисления в том числе и логически вычисленные
+     * константы
+     *
+     * @param s строка для обработки
+     * @return обработанная строка
+     */
+    private String stringProcessing(String s)
+    {
+        String _Temp = s.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
+                replace("_health", getPlayer().getHealth() + "").
+                replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
+        _Temp = MatimatAnalis(_Temp);
+
+        return _Temp;
+    }
+
+    /**
+     * Выполняет комманды но не операторы ветвления и цикла
+     *
+     * @return Если комманды выполнена без ошибки то true иначе false
+     */
+    private boolean ExecuteCommand(String[] _Temp)
+    {
+        if (_Temp[0].contains("_@private"))
+        {
+            Boolean privatefalg = false;
+            _Temp[0] = _Temp[0].replace("_@private:", "");
+            String[] _Names = _Temp[0].split(",");
+            //есть ли такой юзер в пириватном списке?
+            for (String t : _Names)
+            {
+                if (t.equals(getPlayer().getName()))
+                {
+                    privatefalg = true;
+                    break;
+                }
+            }
+            //если есть то разрешаем садится
+            if (privatefalg)
+            {
+            } else //иначе поднимаем
+            {
+                SitOfSofa.powered.poweredDisable(getPlayer());
+            }
+            return true;
+        }
+        if (_Temp[0].contains("_@give"))
+        {
+            giveItem(_Temp[0]);
+            return true;
+        }
+        if (_Temp[0].contains("_@addxp"))
+        {
+            if (_Temp.length > 0)
+            {
+                _Temp[0] = _Temp[0].replace("_@addxp:", "");
+                int[] t = getXpCount(_Temp);
+                addXp(t[0], t[1]);
+            }
+            return true;
+        }
+        if (_Temp[0].contains("_@sethealth"))
+        {
+            _Temp[0] = _Temp[0].replace("_@sethealth:", "");
+            int h = getHealhCount(_Temp);
+            if (h >= 0)
+            {
+                getPlayer().setHealth(h);
+            }
+            return true;
+        }
+        if (_Temp[0].contains("_@xpclear"))
+        {
+            getPlayer().setTotalExperience(0);
+            getPlayer().setLevel(0);
+            getPlayer().setExp(0.0F);
+            return true;
+        }
+        if (_Temp[0].contains("_@restorehealth"))
+        {
+            if (_Temp[0].contains("_@restorehealth:true"))
+            {
+                getPlayer().setHealth(20);
+            }
+            return true;
+        }
+        if (_Temp[0].equals("_@kill"))
+        {
+            getPlayer().setHealth(0);
+            return true;
+        }
+        if (_Temp[0].equals("_@powered"))
+        {
+            SitOfSofa.powered.poweredEnable(getSitingBlock(), getBlock(), getPlayer(), getLenght(), false);
+            return true;
+        }
+        if (_Temp[0].equals("_@poweredall"))
+        {
+            SitOfSofa.powered.poweredEnable(getSitingBlock(), getBlock(), getPlayer(), getLenght(), false);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -349,118 +475,60 @@ public class CommandOnChairs
     public void ExecuteCommands()
     {
         List<String> CommandsList = extractCommand();
-        for (String s : CommandsList)
+        Boolean chanceflag = false;
+        for (int i = 0; i < CommandsList.size(); i++)
         {
-            String _Temp = s.replace("_xp", getPlayer().getTotalExperience() + "").replace("_lvl", getPlayer().getLevel() + "").
-                    replace("_health", getPlayer().getHealth() + "").
-                    replace("_gm", getPlayer().getGameMode().getValue() + "").replace("_food", getPlayer().getFoodLevel() + "");
-        }
-    }
-
-    /**
-     * Может ли пользователь с данным ником сидеть на ступеньках?
-     *
-     * @param player Пользователь для которого производится проверка
-     * @return false - пользователь не может сидеть
-     */
-    public boolean isPrivate(Player player)
-    {
-        boolean flag = true;
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@private:"))
+            String processcom = stringProcessing(CommandsList.get(i));
+            if (!CommandsList.get(i).contains("_if") || !CommandsList.get(i).contains("_begin") || !CommandsList.get(i).contains("_end"))
             {
-                flag = false;
-                String[] _Temp = s.replace("_@private:", "").split(";");
-                for (String _PlName : _Temp)
+                String[] _Temp = processcom.split(",");
+                if (_Temp[0].contains("_@chance"))
                 {
-                    //LOG.info(_PlName);
-                    if (_PlName.equals(player.getDisplayName().toLowerCase()))
+                    if (_Temp[0].contains("_@chance:false") || _Temp[0].contains("_@chance:off"))
                     {
-                        return true;
+                        chanceflag = false;
+                    } else if (_Temp[0].contains("_@chance:true") || _Temp[0].contains("_@chance:on"))
+                    {
+                        chanceflag = true;
+                    }
+                } else if (ExecuteCommand(_Temp) == false)
+                {
+                    LOG.log(Level.WARNING, "[SitOfSofa] Prograam on chair Error command{0}", _Temp.toString());
+                }
+            } else
+            {
+                processcom = stringProcessing(CommandsList.get(i));
+                if (processcom.contains("_if(false)"))
+                {
+                    while (processcom.contains("_end") || processcom.contains("_else") || i < CommandsList.size())
+                    {
+                        i++;
+                    }
+                    i--;
+                    if (processcom.contains("_else"))
+                    {
+                        while (processcom.contains("_end") || i < CommandsList.size())
+                        {
+                            i++;
+                            String[] _Temp = processcom.split(",");
+                            if (_Temp[0].contains("_@chance"))
+                            {
+                                if (_Temp[0].contains("_@chance:false") || _Temp[0].contains("_@chance:off"))
+                                {
+                                    chanceflag = false;
+                                } else if (_Temp[0].contains("_@chance:true") || _Temp[0].contains("_@chance:on"))
+                                {
+                                    chanceflag = true;
+                                }
+                            } else if (ExecuteCommand(_Temp) == false)
+                            {
+                                LOG.log(Level.WARNING, "[SitOfSofa] Prograam on chair Error command{0}", _Temp.toString());
+                            }
+                        }
                     }
                 }
             }
-
         }
-        return flag;
-    }
-
-    /**
-     * Возвращает надоли убивать люього игрока при посадке на кресло или нет
-     *
-     * @return true - игрока надо убить, false - оставить живым
-     */
-    public boolean isKillAll()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@kill"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Возвращает надо ли активировать редстоун механизмы по близости только
-     * рядом с тем блоком на котором сидит игрок
-     *
-     * @return true - редстоун активируется, false - редстоун не активируется
-     */
-    public boolean isPowered()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@powered"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Возвращает надо ли активировать редстоун механизмы по близости на
-     * протяжении всей ступеньки
-     *
-     * @return true - редстоун активируется, false - редстоун не активируется
-     */
-    public boolean isPoweredAll()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@poweredall"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Возвращает надо ли игрокам при посадке на данную супеньку давать предметы
-     * или нет
-     *
-     * @return true - true игроки получаю предмет, false - игроки не получают
-     * предмет
-     */
-    public boolean isGiveItem()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@give:"))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -468,134 +536,32 @@ public class CommandOnChairs
      *
      * @return Получает стак указанных предметов, на табличках
      */
-    public Map<ItemStack, Long> getItemStack()
+    public Map<ItemStack, Long> getItemStack(String _Temps)
     {
         Map<ItemStack, Long> itemStackList = new HashMap<>();
-        List<String> com = getCommandList();
-        for (String s : com)
+        String[] _Temp = _Temps.replace("_@give:", "").split(",");
+        if (_Temp.length > 1)
         {
-            if (s.contains("_@give:"))
+            int DopMn = timeSet(_Temp[3]);
+            _Temp[3] = _Temp[3].replaceAll("[smh]", "");
+            int id = isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : 0;
+            int data = isInt(_Temp[1]) ? Integer.parseInt(_Temp[1]) : 0;
+            int count = 0;
+            if (_Temp.length > 2)
             {
-                String[] _Temp = s.replace("_@give:", "").split(";");
-                if (_Temp.length > 1)
-                {
-                    int DopMn = timeSet(_Temp[3]);
-                    _Temp[3] = _Temp[3].replaceAll("[smh]", "");
-                    int id = isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : 0;
-                    int data = isInt(_Temp[1]) ? Integer.parseInt(_Temp[1]) : 0;
-                    int count = 0;
-                    if (_Temp.length > 2)
-                    {
-                        count = isInt(_Temp[2]) ? (Integer.parseInt(_Temp[2]) >= 0 ? Integer.parseInt(_Temp[2]) : 0) : 0;
-                    }
-                    long timeOut = 0l;
-                    if (_Temp.length > 3)
-                    {
-                        timeOut = isInt(_Temp[3]) ? Long.parseLong(_Temp[3]) * DopMn : 10000;
-                    }
-                    ItemStack i = new ItemStack(id, count);
-                    i.getData().setData((byte) data);
-                    itemStackList.put(i, timeOut);
-                }
+                count = isInt(_Temp[2]) ? (Integer.parseInt(_Temp[2]) >= 0 ? Integer.parseInt(_Temp[2]) : 0) : 0;
             }
+            long timeOut = 0l;
+            if (_Temp.length > 3)
+            {
+                timeOut = isInt(_Temp[3]) ? Long.parseLong(_Temp[3]) * DopMn : 10000;
+            }
+            ItemStack i = new ItemStack(id, count);
+            i.getData().setData((byte) data);
+            itemStackList.put(i, timeOut);
         }
-        LOG.info(itemStackList.toString());
+        //LOG.info(itemStackList.toString());
         return itemStackList;
-    }
-
-    /**
-     * Возвращает, добавлять ли xp игроку при посадке на этот стул или нет
-     *
-     * @return true - добавлять, false - не добавлять
-     */
-    public boolean isAddXp()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@addxp:"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Возвращает, надо ли менять игроку уровень здоровья при посадке
-     *
-     * @return true - добавлять, false - не добавлять
-     */
-    public boolean isSetHealh()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@sethealth:"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Возвращает, снести ли вобще весь XP игроку при посадке
-     *
-     * @return true - снести, false - не сносить
-     */
-    public boolean isClearXp()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@xpclear"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Будет ли при посадке на это кресло у игроков восстанавливаться здоровье?
-     *
-     * @return 1 - при посадке на данное крсло игроки восстанавливают флаг true
-     * здоровье 0 - нет флаг false 2 - флага нету. По настройкам и пермишенам
-     */
-    public int isRestoreHealth()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@restorehealth:false"))
-            {
-                return 0;
-            }
-            if (s.contains("_@restorehealth:true"))
-            {
-                return 1;
-            }
-        }
-        return 2;
-    }
-
-    /**
-     * Может ли игрок иметь шанс получать предметы на этом стуле?
-     *
-     * @return true - да, false - нет
-     */
-    public boolean isChance()
-    {
-        List<String> com = getCommandList();
-        for (String s : com)
-        {
-            if (s.contains("_@chance:false") || s.contains("_@chance:off"))
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -624,174 +590,118 @@ public class CommandOnChairs
      * Получает количество xp которое надо добавить игроку (в том числе и
      * отрицательное ХД)
      *
+     * @param s - МАССИВ СТРОК из которого выдераем необходимое количество xp
      * @return [0] Возвращает количество xp которое надо добавить игроку (в том
      * числе и отрицательное ХД) [1] - таймаут в милесекундах
      */
-    public int[] getXpCount()
+    private int[] getXpCount(String[] _Temp)
     {
-        List<String> com = getCommandList();
-        for (String s : com)
+        int DopMn;
+        long timeOut = 0l;
+        if (_Temp.length > 1)
         {
-            if (s.contains("_@addxp:"))
-            {
-                String[] _Temp = s.replace("_@addxp:", "").split(";");
-                if (_Temp.length > 0)
-                {
-                    int DopMn;
-                    long timeOut = 0l;
-                    if (_Temp.length > 1)
-                    {
-                        DopMn = timeSet(_Temp[1]);
-                        _Temp[1] = _Temp[1].replaceAll("[smh]", "");
-                        timeOut = isInt(_Temp[1]) ? Long.parseLong(_Temp[1]) * DopMn : 10000;
-                    }
-                    return new int[]
-                    {
-                        isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : 0,
-                        (int) timeOut
-                    };
-                }
-            }
+            DopMn = timeSet(_Temp[1]);
+            _Temp[1] = _Temp[1].replaceAll("[smh]", "");
+            timeOut = isInt(_Temp[1]) ? Long.parseLong(_Temp[1]) * DopMn : 10000;
         }
         return new int[]
         {
-            0, 0
+            isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : 0,
+            (int) timeOut
         };
+    }
+
+    /**
+     * Добавлет указанное кол-во опыта юзеру
+     *
+     * @param xp - количество опыта которое надо добавить юзеру
+     * @param timeout - таймаут перед тем как пользователю можно будет добавить
+     * опыт
+     */
+    protected void addXp(int xp, int timeout)
+    {
+        if (!getTimeOutMap().containsKey(getPlayer()))
+        {
+            getTimeOutMap().put(getPlayer(), new TimeOut(0, 0, 0));
+        }
+        if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comXpAddTime() <= timeout))
+        {
+            if (xp >= 0)
+            {
+                getPlayer().giveExp(xp);
+            } else
+            {
+                int _Temp = getPlayer().getTotalExperience();
+                _Temp += xp;
+                if (_Temp >= 0)
+                {
+                    getPlayer().setTotalExperience(0);
+                    getPlayer().setLevel(0);
+                    getPlayer().setExp(0.0F);
+                    getPlayer().giveExp(_Temp);
+                } else
+                {
+                    getPlayer().setTotalExperience(0);
+                    getPlayer().setLevel(0);
+                    getPlayer().setExp(0.0F);
+                    getPlayer().giveExp(0);
+                }
+            }
+            getTimeOutMap().get(getPlayer()).set_comXpAddTime(System.currentTimeMillis());
+        }
     }
 
     /**
      * Получает количество здоровья которое надо установить игроку
      *
+     * @param s - строка из которой выдераем необходимое число
      * @return Возвращает количество здоровья которое надо добавить игроку
      */
-    public int getHealhCount()
+    private int getHealhCount(String[] _Temp)
     {
-        List<String> com = getCommandList();
-        for (String s : com)
+        if (_Temp.length > 0)
         {
-            if (s.contains("_@sethealth:"))
-            {
-                String[] _Temp = s.replace("_@sethealth:", "").split(";");
-                if (_Temp.length > 0)
-                {
-                    return isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : -1;
-                }
-            }
+            return isInt(_Temp[0]) ? Integer.parseInt(_Temp[0]) : -1;
         }
         return -1;
-    }
-
-    public Boolean addXp()
-    {
-        if (isAddXp())
-        {
-            int[] t = getXpCount();
-            if (!getTimeOutMap().containsKey(getPlayer()))
-            {
-                getTimeOutMap().put(getPlayer(), new TimeOut(0, 0, 0));
-            }
-            if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comXpAddTime() <= t[1]))
-            {
-                if (t[0] >= 0)
-                {
-                    getPlayer().giveExp(t[0]);
-                } else
-                {
-                    int _Temp = getPlayer().getTotalExperience();
-                    _Temp += t[0];
-                    if (_Temp >= 0)
-                    {
-                        getPlayer().setTotalExperience(0);
-                        getPlayer().setLevel(0);
-                        getPlayer().setExp(0.0F);
-                        getPlayer().giveExp(_Temp);
-                    } else
-                    {
-                        getPlayer().setTotalExperience(0);
-                        getPlayer().setLevel(0);
-                        getPlayer().setExp(0.0F);
-                        getPlayer().giveExp(0);
-                    }
-                }
-                getTimeOutMap().get(getPlayer()).set_comXpAddTime(System.currentTimeMillis());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Сносит весь XP у игрока, есть есть команда на табличках
-     *
-     * @param player игрок
-     * @param com списко команд на табличках
-     * @return true-если снесли, false - если нет
-     */
-    public Boolean clearXp()
-    {
-        if (isClearXp())
-        {
-            getPlayer().setTotalExperience(0);
-            getPlayer().setLevel(0);
-            getPlayer().setExp(0.0F);
-            return true;
-        }
-        return false;
     }
 
     /**
      * Игрок получает предметы указанные на табличках
      *
-     * @param player игрок
-     * @param com команды
      * @return true- если предметы получены, false -если что то пошло не так
      */
-    public Boolean giveItem()
+    public Boolean giveItem(String _Temp)
     {
         try
         {
-            if (isGiveItem())
+            Map<ItemStack, Long> _Map = getItemStack(_Temp);
+            if (!getTimeOutMap().containsKey(getPlayer()))
+            {;
+                getTimeOutMap().put(getPlayer(), new TimeOut());
+            } else
             {
-                Map<ItemStack, Long> _Map = getItemStack();
-                if (!getTimeOutMap().containsKey(getPlayer()))
+                for (Map.Entry<ItemStack, Long> entry : _Map.entrySet())
                 {
-                    LOG.info("0");
-                    getTimeOutMap().put(getPlayer(), new TimeOut());
-                } else
-                {
-                    for (Map.Entry<ItemStack, Long> entry : _Map.entrySet())
+                    if (!getTimeOutMap().get(getPlayer()).get_comGiveItem().containsKey(entry.getKey()))
                     {
-                        if (!getTimeOutMap().get(getPlayer()).get_comGiveItem().containsKey(entry.getKey()))
-                        {
-                            getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), 0l);
-                        }
-                        if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
-                        {
-                            getPlayer().getInventory().addItem(entry.getKey());
-                            getTimeOutMap().get(getPlayer()).get_comGiveItem().remove(entry.getKey());
-                            getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
-                        }
-
+                        getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), 0l);
                     }
+                    if (!(System.currentTimeMillis() - getTimeOutMap().get(getPlayer()).get_comGiveItem().get(entry.getKey()) <= entry.getValue()))
+                    {
+                        getPlayer().getInventory().addItem(entry.getKey());
+                        getTimeOutMap().get(getPlayer()).get_comGiveItem().remove(entry.getKey());
+                        getTimeOutMap().get(getPlayer()).get_comGiveItem().put(entry.getKey(), System.currentTimeMillis());
+                    }
+
                 }
-                return true;
             }
+            return true;
+
         } catch (Exception e)
         {
             LOG.log(Level.WARNING, "[SitOfSofa] COnC giveItem {0}", e.getStackTrace().toString());
             return false;
-        }
-        return false;
-    }
-
-    public void setHealth()
-    {
-        if (isSetHealh())
-        {
-            int h = getHealhCount();
-            if (h >= 0)
-            {
-                getPlayer().setHealth(h);
-            }
         }
     }
 
@@ -803,14 +713,7 @@ public class CommandOnChairs
         {
             public void run() //Этот метод будет выполняться в побочном потоке
             {
-                giveItem();
-                addXp();
-                clearXp();
-                setHealth();
-                if (isKillAll())// если надо убить то убиваем
-                {
-                    getPlayer().setHealth(0);
-                }
+                ExecuteCommands();
             }
         });
         Comm.start();	//Запуск потока
