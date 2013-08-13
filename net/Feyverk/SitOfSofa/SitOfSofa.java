@@ -456,15 +456,14 @@ public class SitOfSofa extends JavaPlugin
         {
             //Выводим сообщение если надо
             messageLogic.PrintMessageSitdown(player);
-            //Шанс получить предмет
-            messageLogic.comeСhance(player, com.isChance());
-            //Вызываем метод восстановления здоровья
-            messageLogic.restoreHealth(player, com.isRestoreHealth());
             if (!CommamdsUser.containsKey(player))
             {
                 CommamdsUser.put(player, com);
             }
             com.Run();
+
+            //Шанс получить предмет
+            messageLogic.comeСhance(player, com.isChance());
         } catch (Exception e)
         {
             LOG.log(Level.INFO, "[SitOfSofa] COnS {0}", e.getStackTrace().toString());
